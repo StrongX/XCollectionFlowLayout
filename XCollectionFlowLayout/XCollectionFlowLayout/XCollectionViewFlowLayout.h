@@ -21,4 +21,6 @@
 @property (nonatomic, ) CGFloat offset;     //列之间的间距
 
 @property (nonatomic, weak) id<XCollectionViewFlowLayoutDataSource>dataSource;
+
+-(void)setCellCanMove;
 @end
