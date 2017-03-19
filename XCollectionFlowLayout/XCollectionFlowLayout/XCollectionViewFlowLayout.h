@@ -14,7 +14,7 @@
 
 @end
 
-@interface XCollectionViewFlowLayout : UICollectionViewLayout
+@interface XCollectionViewFlowLayout : UICollectionViewFlowLayout
 
 @property (nonatomic, ) int columnCount;    //定义列数
 
