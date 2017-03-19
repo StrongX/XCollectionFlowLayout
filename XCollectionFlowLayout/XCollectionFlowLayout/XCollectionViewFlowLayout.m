@@ -58,41 +58,55 @@
         }
             break;
         case UIGestureRecognizerStateChanged:
-        { // 手势改变
-            //当前手指位置 截图视图位置随着手指移动而移动
+        {
             CGPoint currentPoint = [longPress locationInView:self.collectionView];
             _snapshotView.center = currentPoint;
-            // 计算截图视图和哪个可见cell相交
-            for (UICollectionViewCell *cell in self.collectionView.visibleCells) {
-                // 当前隐藏的cell就不需要交换了,直接continue
+            
+            _moveIndexPath = [self.collectionView indexPathForItemAtPoint:[longPress locationInView:self.collectionView]];
+            if (!_moveIndexPath) {
+                return;
+            }
+            if (_moveIndexPath.item == _oldIndexPath.item) {
+                return;
+            }
+            UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:_moveIndexPath];
+            CGFloat space = sqrtf(pow(_snapshotView.center.x - cell.center.x, 2) + powf(_snapshotView.center.y - cell.center.y, 2));
+            if (space <= _snapshotView.bounds.size.width / 2) {
+                _moveIndexPath = [self.collectionView indexPathForCell:cell];
+                NSLog(@"%ld 与 %ld 交换",_oldIndexPath.item,_moveIndexPath.item);
+                [self moveEndOldIndexPath:_oldIndexPath toMoveIndexPath:_moveIndexPath];
+                [self.collectionView moveItemAtIndexPath:_oldIndexPath toIndexPath:_moveIndexPath];
+                _oldIndexPath = _moveIndexPath;
+                
+                break;
+            }
+
+            
+        /*    for (UICollectionViewCell *cell in self.collectionView.visibleCells) {
                 if ([self.collectionView indexPathForCell:cell] == _oldIndexPath) {
                     continue;
                 }
-                // 计算中心距
                 CGFloat space = sqrtf(pow(_snapshotView.center.x - cell.center.x, 2) + powf(_snapshotView.center.y - cell.center.y, 2));
-                // 如果相交一半就移动
                 if (space <= _snapshotView.bounds.size.width / 2) {
                     _moveIndexPath = [self.collectionView indexPathForCell:cell];
-                    //移动 会调用willMoveToIndexPath方法更新数据源
+               //     NSLog(@"%ld 与 %ld 交换",_oldIndexPath.item,_moveIndexPath.item);
+                    [self replaceMoveIndexPath:_moveIndexPath withOldIndexPath:_oldIndexPath];
                     [self.collectionView moveItemAtIndexPath:_oldIndexPath toIndexPath:_moveIndexPath];
-                    //设置移动后的起始indexPath
                     _oldIndexPath = _moveIndexPath;
+
                     break;
                 }
-            }
+            }*/
         }
             break;
         default:
-        { // 手势结束和其他状态
+        {
             UICollectionViewCell *cell = [self.collectionView cellForItemAtIndexPath:_oldIndexPath];
-            // 结束动画过程中停止交互,防止出问题
             self.collectionView.userInteractionEnabled = NO;
-            // 给截图视图一个动画移动到隐藏cell的新位置
             [UIView animateWithDuration:0.25 animations:^{
                 _snapshotView.center = cell.center;
                 _snapshotView.transform = CGAffineTransformMakeScale(1.0, 1.0);
             } completion:^(BOOL finished) {
-                // 移除截图视图,显示隐藏的cell并开始交互
                 [_snapshotView removeFromSuperview];
                 cell.hidden = NO;
                 self.collectionView.userInteractionEnabled = YES;
@@ -102,8 +116,16 @@
     }
     
 }
+-(void)moveEndOldIndexPath:(NSIndexPath *)OldIndexPath toMoveIndexPath:(NSIndexPath *)moveIndexPath{
+    [_delegate moveEndOldIndexPath:OldIndexPath toMoveIndexPath:moveIndexPath];
+    [self makeAttribute];
+}
+
 -(void)prepareLayout{
     [super prepareLayout];
+    [self makeAttribute];
+}
+-(void)makeAttribute{
     [_cellInfo removeAllObjects];
     [_maxYofCol removeAllObjects];
     for(int i = 0;i<_columnCount;i++){
@@ -130,9 +152,9 @@
         
         attr.frame= CGRectMake((_offset+colWidth)*minCol+_offset, minY, colWidth, height);
         [_cellInfo addObject:attr];
-
+        
     }
-    
+
 }
 -(CGSize)collectionViewContentSize{
     CGFloat maxY = 0;
@@ -141,7 +163,6 @@
             maxY = Y.floatValue;
         }
     }
-    NSLog(@"%f",maxY);
     return CGSizeMake(self.collectionView.frame.size.width, MAX(maxY, self.collectionView.frame.size.height));
 }
 -(UICollectionViewLayoutAttributes *)layoutAttributesForItemAtIndexPath:(NSIndexPath *)indexPath{

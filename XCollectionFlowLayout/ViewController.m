@@ -14,7 +14,7 @@
 #define SCREEN_WIDTH [UIScreen mainScreen].bounds.size.width
 #define SCREEN_HEIGHT [UIScreen mainScreen].bounds.size.height
 
-@interface ViewController ()<UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,XCollectionViewFlowLayoutDataSource>
+@interface ViewController ()<UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,XCollectionViewFlowLayoutDataSource,XCollectionViewFlowLayoutDelegate>
 
 @end
 
@@ -32,14 +32,14 @@
     // Do any additional setup after loading the view, typically from a nib.
     _dataSource = [@[] mutableCopy];
     for(int i =0;i<100;i++){
-        [_dataSource addObject:[self randomColor]];
+        [_dataSource addObject:@{@"color":[self randomColor],@"height":@([self randomHeight])}];
     }
     
     _layout = [XCollectionViewFlowLayout new];
     _layout.columnCount = 3;
     _layout.offset = 10;
     _layout.dataSource = self;
-    
+    _layout.delegate = self;
     _collection = [[UICollectionView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT) collectionViewLayout:_layout];
     [_layout setCellCanMove];
     _collection.delegate = self;
@@ -51,17 +51,11 @@
     
     
 }
-- (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath
-{
-    //取出移动row数据
-    id color = _dataSource[sourceIndexPath.row];
-    //从数据源中移除该数据
-    [_dataSource removeObject:color];
-    //将数据插入到数据源中的目标位置
-    [_dataSource insertObject:color atIndex:destinationIndexPath.row];
-  
+-(void)moveEndOldIndexPath:(NSIndexPath *)OldIndexPath toMoveIndexPath:(NSIndexPath *)moveIndexPath{
+    NSDictionary *temp = _dataSource[OldIndexPath.item];
+    [_dataSource removeObjectAtIndex:OldIndexPath.item];
+    [_dataSource insertObject:temp atIndex:moveIndexPath.item];
 }
-
 
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
@@ -69,8 +63,9 @@
 }
 
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
+    NSDictionary *dict = _dataSource[indexPath.item];
     UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    cell.backgroundColor = _dataSource[indexPath.item];
+    cell.backgroundColor = dict[@"color"];
     return cell;
 }
 
@@ -80,8 +75,13 @@
     int b = random()%255;
     return [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b/255.0 alpha:1];
 }
+-(CGFloat)randomHeight{
+    return random()%100+50;
+}
 -(CGFloat)XCollectionViewItem:(NSIndexPath *)indexPath{
-    return indexPath.item*10+50;
+    NSDictionary *data = _dataSource[indexPath.item];
+    NSNumber *height = data[@"height"];
+    return height.floatValue;
 }
 @end
 
