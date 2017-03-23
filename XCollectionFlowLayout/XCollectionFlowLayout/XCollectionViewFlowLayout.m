@@ -91,7 +91,6 @@
             CGFloat space = sqrtf(pow(_snapshotView.center.x - cell.center.x, 2) + powf(_snapshotView.center.y - cell.center.y, 2));
             if (space <= _snapshotView.bounds.size.width / 2) {
                 _moveIndexPath = [self.collectionView indexPathForCell:cell];
-                NSLog(@"%ld 与 %ld 交换",_oldIndexPath.item,_moveIndexPath.item);
                 [self moveEndOldIndexPath:_oldIndexPath toMoveIndexPath:_moveIndexPath];
                 [self.collectionView moveItemAtIndexPath:_oldIndexPath toIndexPath:_moveIndexPath];
                 _oldIndexPath = _moveIndexPath;
