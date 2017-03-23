@@ -30,6 +30,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    self.automaticallyAdjustsScrollViewInsets = false;
     _dataSource = [@[] mutableCopy];
     for(int i =0;i<100;i++){
         [_dataSource addObject:@{@"color":[self randomColor],@"height":@([self randomHeight])}];
@@ -40,7 +41,7 @@
     _layout.offset = 10;
     _layout.dataSource = self;
     _layout.delegate = self;
-    _collection = [[UICollectionView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT) collectionViewLayout:_layout];
+    _collection = [[UICollectionView alloc]initWithFrame:CGRectMake(0, 64, SCREEN_WIDTH, SCREEN_HEIGHT-64) collectionViewLayout:_layout];
     [_layout setCellCanMove];
     _collection.delegate = self;
     _collection.dataSource = self;

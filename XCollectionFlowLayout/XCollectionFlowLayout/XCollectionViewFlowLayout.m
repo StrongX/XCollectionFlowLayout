@@ -39,7 +39,8 @@
     switch (longPress.state) {
         case UIGestureRecognizerStateBegan:
         {
-            NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:[longPress locationInView:self.collectionView]];
+            CGPoint point = [longPress locationInView:self.collectionView];
+            NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:point];
             _oldIndexPath = indexPath;
             if (indexPath == nil) {
                 break;
@@ -60,6 +61,23 @@
         case UIGestureRecognizerStateChanged:
         {
             CGPoint currentPoint = [longPress locationInView:self.collectionView];
+            CGPoint offset = self.collectionView.contentOffset;
+            if (currentPoint.y>offset.y+self.collectionView.frame.size.height-200) {
+                CGFloat offsetY = offset.y+200;
+                if (offsetY<self.collectionView.contentSize.height-self.collectionView.frame.size.height) {
+                    [self.collectionView setContentOffset:CGPointMake(0, offsetY) animated:true];
+                }else{
+                    [self.collectionView setContentOffset:CGPointMake(0, self.collectionView.contentSize.height-self.collectionView.frame.size.height) animated:true];
+                }
+            }
+            if (currentPoint.y<offset.y+200) {
+                CGFloat offsetY = offset.y-200;
+                if (offsetY>0) {
+                    [self.collectionView setContentOffset:CGPointMake(0, offsetY) animated:true];
+                }else{
+                    [self.collectionView setContentOffset:CGPointMake(0, 0) animated:true];
+                }
+            }
             _snapshotView.center = currentPoint;
             
             _moveIndexPath = [self.collectionView indexPathForItemAtPoint:[longPress locationInView:self.collectionView]];
